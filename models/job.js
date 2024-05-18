@@ -37,12 +37,58 @@ class Job {
         return job;
     }
 
-    /** Find all jobs */
-    static async findAll(){
-        const results = await db.query(`
-        SELECT id, title, salary, equity, company_handle AS "companyHandle"
-        FROM jobs
-        `);
+    /** Find all jobs 
+     * 
+     * Filterable by title, minSalary, and has Equity only
+    */
+    static async findAll(queryStringData={}){
+        let queryKeys = Object.keys(queryStringData);
+        let queryValues = Object.values(queryStringData);
+        
+        let filterStatement = "";
+        let filterSqlArr = []; // Array of filter sql statements, goes after WHERE
+        let filterVals = []; // Arr of vals corr. by index to above sql statements
+
+        // Check if queryStringData has any filter parameters, and 
+        // push to filteredSqlArr => ["(title ILIKE $1)", "(minSalary < $2)", ...]
+        if(queryKeys.length != 0){
+            filterStatement = "WHERE";
+            for(let i in queryKeys){
+                if(queryKeys[i] == "title"){
+                    //title needs to be prepared specially for partial filters using % wildcards
+                    filterSqlArr.push(`(title ILIKE $${parseInt(i)+1})`);
+                    filterVals.push(`%${queryValues[i]}%`);
+
+                }else if(queryKeys[i] == "minSalary"){
+                    //filter jobs by minimum salary
+                    filterSqlArr.push(`(salary > $${parseInt(i)+1})`);
+                    filterVals.push(parseInt(queryValues[i]));
+
+                }else if(queryKeys[i] == "hasEquity" && queryKeys[i]){
+                    // filter jobs by "hasEquity" == true
+                    filterSqlArr.push(`(equity > $${parseInt(i)+1})`);
+                    filterVals.push(0);
+
+                }else{
+                    // If filter parameter not matching named filters, throw error
+                    throw new ExpressError(`Invalid filter parameter: ${queryKeys[i]}`, 400);
+                }
+            }
+            filterStatement += filterSqlArr.join(' AND ');
+        }
+
+        const sqlQuery = 
+            `SELECT id, 
+                    title, 
+                    salary, 
+                    equity, 
+                    company_handle AS "companyHandle"
+             FROM jobs
+             ${filterStatement}
+             ORDER BY title
+            `;
+        
+        const results = await db.query(sqlQuery, filterVals);
 
         return (results.rows);
     }
@@ -65,7 +111,6 @@ class Job {
      * Can only update title, salary, and equity
     */
     static async update(jobId, updateData){
-        console.log(updateData);
         const { setCols, values } = sqlForPartialUpdate(
             updateData, 
             {

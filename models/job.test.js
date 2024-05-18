@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../db.js");
-const { BadRequestError, NotFoundError } = require("../expressError.js");
+const { BadRequestError, NotFoundError, ExpressError } = require("../expressError.js");
 const Job = require("./job.js");
 const { commonBeforeAll, commonAfterAll, 
     commonBeforeEach, commonAfterEach 
@@ -54,9 +54,24 @@ describe("create", function() {
 /************* findAll *****************/
 
 describe("findAll", function() {
+    
     test("Works: no Filter", async function() {
         let jobs = await Job.findAll();
         expect(jobs).toEqual([
+            {
+                id: expect.any(Number),
+                title: "Automotive Engineer", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
+            {
+                id: expect.any(Number),
+                title: "Front Room Staff", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
             {
                 id: expect.any(Number),
                 title: "job title 1", 
@@ -70,8 +85,135 @@ describe("findAll", function() {
                 salary: 22222,
                 equity: "0.002",
                 companyHandle: "c2"
+            },
+            {
+                id: expect.any(Number),
+                title: "job title 3", 
+                salary: 22222,
+                equity: null,
+                companyHandle: "c2"
+            },
+            {
+                id: expect.any(Number),
+                title: "job title 4", 
+                salary: 22222,
+                equity: "0",
+                companyHandle: "c2"
+            },
+        ])
+    })
+    
+    test("Works: filter by title", async function() {
+        
+        let filterParams = { title: "om" }
+
+        let jobs = await Job.findAll(filterParams);
+        expect(jobs).toEqual([
+            {
+                id: expect.any(Number),
+                title: "Automotive Engineer", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
+            {
+                id: expect.any(Number),
+                title: "Front Room Staff", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
+        ])
+    })
+    
+    test("Works: filter by minSalary", async function() {
+        
+        let filterParams = { minSalary: 30000 }
+
+        let jobs = await Job.findAll(filterParams);
+        expect(jobs).toEqual([
+            {
+                id: expect.any(Number),
+                title: "Automotive Engineer", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
+            {
+                id: expect.any(Number),
+                title: "Front Room Staff", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
+        ])
+    })
+    
+    test("Works: filter by hasEquity", async function() {
+        
+        let filterParams = { hasEquity: true }
+
+        let jobs = await Job.findAll(filterParams);
+        expect(jobs).toEqual([
+            {
+                id: expect.any(Number),
+                title: "Automotive Engineer", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
+            {
+                id: expect.any(Number),
+                title: "Front Room Staff", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
+            },
+            {
+                id: expect.any(Number),
+                title: "job title 1", 
+                salary: 11111,
+                equity: "0.001",
+                companyHandle: "c1"
+            },
+            {
+                id: expect.any(Number),
+                title: "job title 2", 
+                salary: 22222,
+                equity: "0.002",
+                companyHandle: "c2"
+            },
+        ])
+    })
+    
+    test("Works: multiple filters", async function() {
+        
+        let filterParams = { title: "ti", minSalary:30000, hasEquity: true }
+
+        let jobs = await Job.findAll(filterParams);
+        expect(jobs).toEqual([
+            {
+                id: expect.any(Number),
+                title: "Automotive Engineer", 
+                salary: 33333,
+                equity: "0.003",
+                companyHandle: "c3"
             }
         ])
+    })
+    
+    test("Throw error when passed unexpected parameter", async function() {
+        
+        let filterParams = { bananas: "yes" }
+
+        try{
+            await Job.findAll(filterParams);
+
+        }catch(e){
+            expect(e instanceof ExpressError).toBeTruthy();
+            expect(e.message).toEqual(`Invalid filter parameter: bananas`)
+        }
+        
     })
 })
 
