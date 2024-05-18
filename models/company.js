@@ -1,7 +1,8 @@
 "use strict";
 
+const { query } = require("express");
 const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
+const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for companies. */
@@ -45,19 +46,72 @@ class Company {
   }
 
   /** Find all companies.
+   * 
+   * Filterable by name, min or max employees (Consider refactoring later)
+   * 
+   * filterSql: variable for preparing an SQL WHERE clause
+   * filterSqlArr: array for containing multiple filters
+   * filterVals: array for values to be passed as parameterized values
+   * 
+   * sqlQuery: string containing sql query, if there are filters they will
+   * be passed in via filterSql
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
+   * 
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
+  static async findAll(queryStringData={}) {
+    let queryKeys = Object.keys(queryStringData);
+    let queryValues = Object.values(queryStringData);
+
+    const {minEmployees, maxEmployees} = queryStringData;
+    // throw error if minEmployees is greater than maxEmployees
+    if(minEmployees > maxEmployees) throw new ExpressError("minEmployees must be less than maxEmployees", 400);
+
+    let filterSql = "";
+    let filterSqlArr = [];
+    let filterVals = [];
+
+    // check if queryStringData has any filter parameters, and 
+    // push to filteredSqlArr => ["(name ILIKE $1)", "(numEmployees < $2)", ...]
+    if(queryKeys.length !== 0){
+      filterSql = "WHERE";
+      for(let i in queryKeys){
+        if(queryKeys[i] == "name"){
+          // name needs to be prepared specially for partial filters using % wildcards
+          filterSqlArr.push(`(name ILIKE $${parseInt(i)+1})`);
+          filterVals.push(`%${queryValues[i]}%`)
+          console.log(filterVals);
+        }else if(queryKeys[i] == "minEmployees"){
+          // filter companies by a minimum number of employees
+          filterSqlArr.push(`(num_employees > $${parseInt(i)+1})`);
+          
+          filterVals.push(parseInt(queryValues[i]));
+        }else if(queryKeys[i] == "maxEmployees"){
+          // filter companies by a maximum number of employees
+          filterSqlArr.push(`(num_employees < $${parseInt(i)+1})`);
+          
+          filterVals.push(parseInt(queryValues[i]));
+        }else{
+          // If filter parameter not matching named filters, throw error
+          throw new ExpressError(`Invalid filter parameter: ${queryKeys[i]}`, 400);
+        }
+      }   
+      filterSql += filterSqlArr.join(' AND ');
+    }
+
+    const sqlQuery = 
+    `SELECT handle,
+            name,
+            description,
+            num_employees AS "numEmployees",
+            logo_url AS "logoUrl"
+    FROM companies
+    ${filterSql}
+    ORDER BY name`;
+    
+    const companiesRes = await db.query(sqlQuery, filterVals);
+
     return companiesRes.rows;
   }
 

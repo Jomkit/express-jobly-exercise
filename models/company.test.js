@@ -85,6 +85,84 @@ describe("findAll", function () {
       },
     ]);
   });
+  
+  test("works: filters by name, case-insensitive", async function () {
+    let filterParams = { name: "c2" };
+    let companies = await Company.findAll(filterParams);
+    expect(companies).toEqual([
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      }
+    ]);
+  });
+
+  test("works: filters by min employees", async function () {
+    let filterParams = { minEmployees: 2 };
+    let companies = await Company.findAll(filterParams);
+    expect(companies).toEqual([
+      {
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img",
+      }
+    ]);
+  });
+
+  test("works: filters by max employees", async function () {
+    let filterParams = { maxEmployees: 2 };
+    let companies = await Company.findAll(filterParams);
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      }
+    ]);
+  });
+
+  test("works: filters with multiple parameters", async function () {
+    let filterParams = { name: 'c', maxEmployees:3 };
+    let companies = await Company.findAll(filterParams);
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      },
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      }
+    ]);
+  });
+
+  test("Error if minEmployee greater than maxEmployee", async function () {
+    let filterParams = { minEmployees: 4, maxEmployees:3 };
+    expect(async () => {
+      await Company.findAll(filterParams);
+    }).rejects.toThrow();
+  });
+
+  test("Error if passed unexpected filter parameter", async function () {
+    let filterParams = { unexpectedParameter: "This should fail" };
+    expect(async () => {
+      await Company.findAll(filterParams);
+    }).rejects.toThrow();
+  });
+
 });
 
 /************************************** get */

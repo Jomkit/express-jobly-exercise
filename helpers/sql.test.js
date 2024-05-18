@@ -1,3 +1,4 @@
+const { BadRequestError } = require("../expressError");
 const { sqlForPartialUpdate } = require("./sql");
 
 describe("sqlForPartialUpdate", function() {
@@ -12,5 +13,16 @@ describe("sqlForPartialUpdate", function() {
                 values: ['Test', 21]
             }
         )
+    })
+
+    test("BadRequestError if passed no data", function() {
+        try{
+            const dataToUpdate = {};
+            const jsToSql = { "firstName": "first_name", "age": "age"}
+            const res = sqlForPartialUpdate(dataToUpdate, jsToSql);
+            fail();
+        }catch(e){
+            expect(e instanceof BadRequestError).toBeTruthy();
+        }
     })
 })

@@ -23,6 +23,8 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
 
   // Ex: {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
   const cols = keys.map((colName, idx) =>
+      // get sql colName from jsToSql if it wasn't already formatted correctly,
+      // or if it is formatted just use colName
       `"${jsToSql[colName] || colName}"=$${idx + 1}`,
   );
 
@@ -31,5 +33,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
     values: Object.values(dataToUpdate),
   };
 }
+
+// function sqlForFilter()
 
 module.exports = { sqlForPartialUpdate };
