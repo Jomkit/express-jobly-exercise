@@ -228,3 +228,52 @@ describe("remove", function () {
     }
   });
 });
+
+/*************************************** apply */
+
+describe("apply", function() {
+  
+  test("works", async function() {
+    const result = await db.query(`
+    SELECT id FROM jobs
+    WHERE title = 'job title 1'
+    `)
+    const testJobId = result.rows[0].id;
+
+    const resp = await User.apply("u1", testJobId);
+    
+    expect(resp).toEqual({ username: "u1", jobId: testJobId });
+  })
+  
+  test("works if two users apply to same job", async function() {
+    const result = await db.query(`
+    SELECT id FROM jobs
+    WHERE title = 'job title 1'
+    `)
+    const testJobId = result.rows[0].id;
+
+    const resp = await User.apply("u1", testJobId);
+    const resp2 = await User.apply("u2", testJobId);
+    
+    expect(resp).toEqual({ username: "u1", jobId: testJobId });
+    expect(resp2).toEqual({ username: "u2", jobId: testJobId });
+  })
+
+  test("BadRequestError if duplicate application detected", async function() {
+    const result = await db.query(`
+    SELECT id FROM jobs
+    WHERE title = 'job title 1'
+    `)
+    const testJobId = result.rows[0].id;
+
+    try{
+      await User.apply("u1", testJobId);
+      await User.apply("u2", testJobId);
+      await User.apply("u1", testJobId);
+      fail();
+    } catch(e){
+      expect(e instanceof BadRequestError).toBeTruthy();
+    }
+    
+  })
+})

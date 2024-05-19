@@ -117,5 +117,23 @@ router.delete("/:username", ensureLoggedIn, sameUserOrAdmin, async function (req
   }
 });
 
+/** POST /[username]/jobs/[jobId] => { applied: jobId}
+ * 
+ * Should not allow duplicate job applications
+ * 
+ * authorization: logged-in user OR admin
+ */
+
+router.post("/:username/jobs/:jobId", ensureLoggedIn, sameUserOrAdmin, async function (req, res, next) {
+  try{
+    const { username, jobId } = req.params;
+    const result = await User.apply(username, jobId);
+
+    return res.json({ applied: result.jobId });
+
+  }catch(e){
+    return next(e);
+  }
+})
 
 module.exports = router;

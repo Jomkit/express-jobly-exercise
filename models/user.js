@@ -204,6 +204,31 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
+  
+  /** Register a job application to a user
+   * 
+   * Returns { username, jobId }
+   * 
+   * No duplicate job applications
+   */
+  
+  static async apply(username, jobId){
+    const duplicateCheck = await db.query(
+      `SELECT job_id AS "jobId" FROM applications
+       WHERE username = $1 AND job_id = $2
+       `, [username, jobId]
+    )
+    if(duplicateCheck.rows[0]) throw new BadRequestError(`Duplicate Application for job ID: ${jobId}`);
+    
+    const result = await db.query(
+      `INSERT INTO applications (username, job_id)
+       VALUES ($1, $2)
+       RETURNING username, job_id AS "jobId"
+      `, [username, jobId]
+    );
+    const application = result.rows[0];
+    return application; 
+  }
 }
 
 

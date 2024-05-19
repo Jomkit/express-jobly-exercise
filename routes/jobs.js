@@ -42,7 +42,7 @@ router.post("/", ensureLoggedIn, isAdmin, async function (req, res, next) {
 /** GET / => gets all jobs
  * { jobs: [{ id, title, salary, equity, companyHandle}, ...]}
  * 
- * Filter functionality: TBD
+ * Filter functionality: implemented in job model findAll(req.query)
  * 
  * Authorization: None
  */
@@ -51,6 +51,21 @@ router.get("/", async function (req, res, next) {
         const jobs = await Job.findAll(req.query);
 
         return res.json({ jobs });
+    } catch(e) {
+        return next(e);
+    }
+})
+
+/** GET /jobId => gets a job by id
+ * { job: { id, title, salary, equity, companyHandle} }
+ * 
+ * Authorization: None
+ */
+router.get("/:jobId", async function (req, res, next) {
+    try{
+        const job = await Job.get(req.params.jobId);
+
+        return res.json({ job });
     } catch(e) {
         return next(e);
     }

@@ -145,6 +145,35 @@ describe("GET /jobs", function() {
     })
 })
 
+/** GET /jobs/:jobId *************************/
+
+describe("GET /jobs/:jobId", function() {
+
+    test("works for anyone", async function() {
+        const resp = await request(app)
+        .get("/jobs/1");
+
+        expect(resp.statusCode).toEqual(200);
+        expect(resp.body).toEqual({
+            job:
+                {
+                    id: expect.any(Number),
+                    title: "Test Job",
+                    salary: 111111,
+                    equity: "0.001",
+                    companyHandle: "c1"
+                }
+        })
+    })
+
+    test("NotFoundError if ID not found", async function() {
+        const resp = await request(app)
+        .get("/jobs/99999");
+
+        expect(resp.statusCode).toEqual(404);
+    })
+})
+
 /** PATCH /jobs/:id *********************/
 
 describe("PATCH /jobs/jobId", function() {

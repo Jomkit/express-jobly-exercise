@@ -12,8 +12,10 @@ const {
   commonAfterEach,
   commonAfterAll,
   u1Token,
+  u2Token,
   adminToken
 } = require("./_testCommon");
+const { BadRequestError, NotFoundError } = require("../expressError.js");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -375,3 +377,88 @@ describe("DELETE /users/:username", function () {
     expect(resp.statusCode).toEqual(404);
   });
 });
+
+/**************** POST /users/:username/jobs/:jobId ****************/
+
+describe("POST /users/:username/jobs/:jobId", function() {
+ 
+  test("Works for user with matching username to token", async function() {
+    
+    const jobResult = await db.query(`
+    SELECT * FROM jobs WHERE title = 'Test Job'
+    `);
+    const testJob1 = jobResult.rows[0];
+
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${testJob1.id}`)
+      .set("authorization", `Bearer ${u1Token}`);
+
+      expect(resp.statusCode).toEqual(200);
+      expect(resp.body).toEqual({ applied: testJob1.id });
+  })
+ 
+  test("Works for admin applying a job for a user", async function() {
+    
+    const jobResult = await db.query(`
+    SELECT * FROM jobs WHERE title = 'Test Job'
+    `);
+    const testJob1 = jobResult.rows[0];
+
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${testJob1.id}`)
+      .set("authorization", `Bearer ${adminToken}`);
+
+      expect(resp.statusCode).toEqual(200);
+      expect(resp.body).toEqual({ applied: testJob1.id });
+  })
+ 
+  test("Unauthorized for a different user", async function() {
+    
+    const jobResult = await db.query(`
+    SELECT * FROM jobs WHERE title = 'Test Job'
+    `);
+    const testJob1 = jobResult.rows[0];
+
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${testJob1.id}`)
+      .set("authorization", `Bearer ${u2Token}`);
+
+      expect(resp.statusCode).toEqual(401);
+  })
+ 
+  test("Unauthorized if not logged in", async function() {
+    
+    const jobResult = await db.query(`
+    SELECT * FROM jobs WHERE title = 'Test Job'
+    `);
+    const testJob1 = jobResult.rows[0];
+
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${testJob1.id}`);
+
+      expect(resp.statusCode).toEqual(401);
+  })
+ 
+  test("BadRequestError: duplicate application (same user, same jobId", async function() {
+    
+    const jobResult = await db.query(`
+    SELECT * FROM jobs WHERE title = 'Test Job'
+    `);
+    const testJob1 = jobResult.rows[0];
+    // console.log("TESTTESTTEST", testJob1);
+    await request(app)
+      .post(`/users/u1/jobs/${testJob1.id}`)
+      .set("authorization", `Bearer ${u1Token}`);
+
+    try{
+      const duplApp = await request(app)
+        .post(`/users/u1/jobs/${testJob1.id}`)
+        .set("authorization", `Bearer ${u1Token}`);
+
+      expect(duplApp.statusCode).toEqual(400);
+      
+      }catch(e){
+      expect(e instanceof BadRequestError).toBeTruthy();
+    }
+  })
+})

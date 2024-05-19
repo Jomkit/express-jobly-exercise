@@ -13,6 +13,8 @@ async function commonBeforeAll() {
   await db.query("DELETE FROM companies");
   // noinspection sqlWithoutWhere
   await db.query("DELETE FROM jobs");
+  
+  await db.query("ALTER SEQUENCE jobs_id_seq RESTART WITH 1");  
 
   await Company.create(
       {
@@ -105,6 +107,7 @@ async function commonAfterAll() {
 }
 
 const u1Token = createToken({ username: "u1", isAdmin: false });
+const u2Token = createToken({ username: "u2", isAdmin: false });
 const adminToken = createToken({ username: "a1", isAdmin: true });
 
 module.exports = {
@@ -113,5 +116,6 @@ module.exports = {
   commonAfterEach,
   commonAfterAll,
   u1Token,
+  u2Token,
   adminToken
 };
