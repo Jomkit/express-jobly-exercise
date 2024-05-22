@@ -221,10 +221,10 @@ class User {
     if(duplicateCheck.rows[0]) throw new BadRequestError(`Duplicate Application for job ID: ${jobId}`);
     
     const result = await db.query(
-      `INSERT INTO applications (username, job_id)
-       VALUES ($1, $2)
+      `INSERT INTO applications (username, job_id, current_state)
+       VALUES ($1, $2, $3)
        RETURNING username, job_id AS "jobId"
-      `, [username, jobId]
+      `, [username, jobId, "applied"]
     );
     const application = result.rows[0];
     return application; 

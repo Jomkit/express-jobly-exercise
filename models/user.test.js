@@ -243,6 +243,16 @@ describe("apply", function() {
     const resp = await User.apply("u1", testJobId);
     
     expect(resp).toEqual({ username: "u1", jobId: testJobId });
+
+    const checkAppRes = await db.query(`
+    SELECT * FROM applications
+    WHERE job_id = ${testJobId}`);
+    const checkApp = checkAppRes.rows[0];
+    expect(checkApp).toEqual({
+      username: "u1",
+      job_id: testJobId,
+      current_state: "applied"
+    })
   })
   
   test("works if two users apply to same job", async function() {

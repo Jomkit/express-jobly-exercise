@@ -32,7 +32,6 @@ describe("POST /users", function () {
           username: "u-new",
           firstName: "First-new",
           lastName: "Last-newL",
-          password: "password-new",
           email: "new@email.com",
           isAdmin: false,
         })
@@ -56,7 +55,6 @@ describe("POST /users", function () {
           username: "u-new",
           firstName: "First-new",
           lastName: "Last-newL",
-          password: "password-new",
           email: "new@email.com",
           isAdmin: true,
         })
@@ -393,8 +391,8 @@ describe("POST /users/:username/jobs/:jobId", function() {
       .post(`/users/u1/jobs/${testJob1.id}`)
       .set("authorization", `Bearer ${u1Token}`);
 
-      expect(resp.statusCode).toEqual(200);
-      expect(resp.body).toEqual({ applied: testJob1.id });
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({ applied: testJob1.id });
   })
  
   test("Works for admin applying a job for a user", async function() {

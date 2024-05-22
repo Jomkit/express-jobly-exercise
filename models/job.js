@@ -106,6 +106,21 @@ class Job {
         return (result.rows[0]);    
     }
 
+    // /** Get a job by id with technologies */
+    // static async get(jobId){
+    //     const result = await db.query(`
+    //     SELECT j.id, j.title, j.salary, j.equity, j.company_handle AS "companyHandle", t.name AS "technologies"
+    //     FROM jobs j
+    //     JOIN technologies_jobs tj ON tj.job_id = j.id
+    //     JOIN technologies t ON t.id = tj.tech_id
+    //     WHERE j.id = $1`,
+    //     [jobId])
+        
+    //     if(result.rows.length == 0) throw new NotFoundError("No job found");    
+        
+    //     return (result.rows[0]);    
+    // }
+
     /** Update a job by id 
      * 
      * Can only update title, salary, and equity

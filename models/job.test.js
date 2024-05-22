@@ -321,6 +321,7 @@ describe("remove", function(){
     test("works", async function() {
         let job = await Job.create(testJob);
         let job1 = await Job.get(job.id);
+        let deletedId = job1.id;
 
         expect(job1).toEqual({
             ...job
@@ -328,7 +329,18 @@ describe("remove", function(){
 
         await Job.remove(job1.id);
         const res = await db.query(
-            "SELECT * FROM jobs WHERE id=1");
+            `SELECT * FROM jobs WHERE id=${deletedId}`);
+
+        console.log(res.rows);
         expect(res.rows.length).toEqual(0);
+    });
+
+    test("NotFoundError if trying to remove job that doesn't exist", async function() {
+        try{
+            await Job.remove(9999);
+            fail();
+        } catch(e) {
+            expect(e instanceof NotFoundError).toBeTruthy();
+        }
     });
 })

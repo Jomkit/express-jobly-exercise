@@ -31,7 +31,7 @@ router.post("/", ensureLoggedIn, isAdmin, async function (req, res, next) {
             throw new BadRequestError(errs);
         }
 
-        const job = await Job.create(req.body);
+        const job = await Job.create(req.body); 
         return res.status(201).json({ job });
         
     }catch(e) {
@@ -40,7 +40,7 @@ router.post("/", ensureLoggedIn, isAdmin, async function (req, res, next) {
 })
 
 /** GET / => gets all jobs
- * { jobs: [{ id, title, salary, equity, companyHandle}, ...]}
+ * { jobs: [{ id, title, salary, equity, companyHandle}, ...]}  
  * 
  * Filter functionality: implemented in job model findAll(req.query)
  * 
@@ -57,7 +57,7 @@ router.get("/", async function (req, res, next) {
 })
 
 /** GET /jobId => gets a job by id
- * { job: { id, title, salary, equity, companyHandle} }
+ * { job: { id, title, salary, equity, companyHandle, technologies} }
  * 
  * Authorization: None
  */

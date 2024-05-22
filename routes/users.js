@@ -4,6 +4,8 @@
 
 const jsonschema = require("jsonschema");
 
+const generator = require("generate-password");
+
 const express = require("express");
 const { ensureLoggedIn, isAdmin, sameUserOrAdmin } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
@@ -20,6 +22,9 @@ const router = express.Router();
  * Adds a new user. This is not the registration endpoint --- instead, this is
  * only for admin users to add new users. The new user being added can be an
  * admin.
+ * 
+ * Admin should NOT need to provide password. Password should be automatically 
+ * generated.
  *
  * This returns the newly created user and an authentication token for them:
  *  {user: { username, firstName, lastName, email, isAdmin }, token }
@@ -34,8 +39,12 @@ router.post("/", ensureLoggedIn, isAdmin, async function (req, res, next) {
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
-
-    const user = await User.register(req.body);
+    const rndPassword = generator.generate({ length: 10, numbers: true });
+    const userData = {
+      ...req.body,
+      password: rndPassword
+    }
+    const user = await User.register(userData);
     const token = createToken(user);
     return res.status(201).json({ user, token });
   } catch (err) {
@@ -116,6 +125,8 @@ router.delete("/:username", ensureLoggedIn, sameUserOrAdmin, async function (req
     return next(err);
   }
 });
+
+/** GET /[username]/jobs => { matching jobs: [job1, job2, ... ]} */
 
 /** POST /[username]/jobs/[jobId] => { applied: jobId}
  * 
